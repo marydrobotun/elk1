@@ -1,0 +1,46 @@
+filebeat.inputs:
+- type: log
+  enabled: true
+  paths:
+    - /var/log/services/nginx/*.log
+  fields:
+    service: nginx
+  fields_under_root: true
+
+- type: log
+  enabled: true
+  paths:
+    - /var/log/services/php/*.log
+  fields:
+    service: php
+  fields_under_root: true
+
+- type: log
+  enabled: true
+  paths:
+    - /var/log/services/mysql/*.log
+  fields:
+    service: mysql
+  fields_under_root: true
+
+- type: container
+  paths:
+    - '/var/lib/docker/containers/*/*.log'
+  processors:
+    - add_docker_metadata: ~
+
+output.elasticsearch:
+  hosts: ["elasticsearch:9200"]
+  indices:
+    - index: "filebeat-nginx-%{+yyyy.MM.dd}"
+      when.equals:
+        service: "nginx"
+    - index: "filebeat-php-%{+yyyy.MM.dd}"
+      when.equals:
+        service: "php"
+    - index: "filebeat-mysql-%{+yyyy.MM.dd}"
+      when.equals:
+        service: "mysql"
+
+setup.template.enabled: false
+setup.ilm.enabled: false

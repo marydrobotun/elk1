@@ -1,0 +1,52 @@
+metricbeat.config.modules:
+  path: ${path.config}/modules.d/*.yml
+  reload.enabled: false
+
+metricbeat.modules:
+- module: system
+  metricsets:
+    - cpu
+    - memory
+    - diskio
+    - network
+    - filesystem
+    - process
+  enabled: true
+  period: 10s
+  processes: ['.*']
+  cpu.metrics: ["percentages"]
+  core.metrics: ["percentages"]
+
+- module: docker
+  metricsets:
+    - container
+    - cpu
+    - memory
+    - diskio
+    - network
+  hosts: ["unix:///var/run/docker.sock"]
+  enabled: true
+  period: 10s
+
+- module: nginx
+  metricsets: ["stubstatus"]
+  enabled: true
+  period: 10s
+  hosts: ["http://nginx:80/nginx_status"]
+
+- module: mysql
+  metricsets: ["status", "galera_status"]
+  enabled: true
+  period: 10s
+  hosts: ["tcp(db:3306)/"]
+  username: "root"
+  password: "rootpass"
+
+processors:
+  - add_docker_metadata: ~
+
+output.elasticsearch:
+  hosts: ["localhost:9200", "127.0.0.1:9200"]
+
+setup.template.enabled: false
+setup.ilm.enabled: false
